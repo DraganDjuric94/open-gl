@@ -30,7 +30,7 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	float positions[6] = {
-		-0.5f, -0.5, 0.0f, 0.5f, 0.5f, -0.5f
+		-0.5f, -0.5, 0.0f, 0.5f, 0.5f, -0.5f 
 	};
 
 	unsigned int buffer;
@@ -40,7 +40,7 @@ int main(void)
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-
+	 
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
