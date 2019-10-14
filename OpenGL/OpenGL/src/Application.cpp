@@ -11,9 +11,14 @@
 #include "Renderer.h"
 
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Texture.h"
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 int main(void)
 {
@@ -50,10 +55,10 @@ int main(void)
 
 	{
 		float positions[] = {
-			-0.5f, -0.5,   // 1
-			 0.5f, -0.5f,  // 2
-			 0.5f,  0.5f,  // 3
-			-0.5f,  0.5f,  // 4
+			-0.5f, -0.5f, 0.0f, 0.0f, // 1
+			 0.5f, -0.5f, 1.0f, 0.0f, // 2
+			 0.5f,  0.5f, 1.0f, 1.0f, // 3
+			-0.5f,  0.5f, 0.0f, 1.0f  // 4
 		};
 
 		unsigned int indices[] = {
@@ -61,23 +66,36 @@ int main(void)
 			2, 3, 0  // triangle 2
 		};
 
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
 		VertexArray va;
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 
 		VertexBufferLayout layout;
+		layout.Push<float>(2);
 		layout.Push<float>(2);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
+		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+
 		Shader shader("res/shaders/basic.shader");
 		shader.Bind();
 		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.f);
+		shader.SetUniformMat4f("u_MVP", proj);
+
+		Texture texture("res/textures/logo.png");
+		texture.Bind(0);
+		shader.SetUniform1i("u_Texture", 0);
 
 		va.Unbind();
 		shader.Unbind();
 		vb.Unbind();
 		ib.Unbind();
+
+		Renderer renderer;
 
 		float r = 0.0f;
 		float increment = 0.05f;
@@ -85,15 +103,12 @@ int main(void)
 		while (!glfwWindowShouldClose(window))
 		{
 			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
 			shader.Bind();
 			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.f);
 
-			va.Bind();
-			ib.Bind();
-
-			GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+			renderer.Draw(va, ib, shader);
 
 			if (r > 1.0f)
 				increment = -0.05f;
